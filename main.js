@@ -16,5 +16,12 @@ function moveTarget() {
   target.style.top = `${randomY}px`;
 }
 
-// Initial target position
-moveTarget();
+function updateScore() {
+  score++;
+  scoreBoard.textContent = `Score: ${score}`;
+}
+
+target.addEventListener('click', function() {
+  updateScore();
+  moveTarget();
+});
