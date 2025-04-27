@@ -8,10 +8,6 @@ body {
   background-color: #f0f0f0;
 }
 
-#setupArea {
-  padding-bottom: 2%;
-}
-
 #gameArea {
   position: relative;
   width: 80%;
@@ -32,24 +28,4 @@ body {
 #scoreBoard {
   margin-top: 20px;
   font-size: 24px;
-}
-
-/* Add these to your existing CSS */
-.target {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 20px;
-}
-
-#setupArea button {
-  padding: 5px 15px;
-  margin-left: 10px;
-}
-
-#setupArea input {
-  padding: 5px;
-  width: 50px;
 }
