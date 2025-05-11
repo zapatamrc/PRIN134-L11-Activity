@@ -1,32 +1,24 @@
 const gameArea = document.getElementById('gameArea');
-const originalTarget = document.getElementById('target');
 const scoreBoard = document.getElementById('scoreBoard');
 const setupInput = document.querySelector('#setupArea input');
 const setupButton = document.querySelector('#setupArea button');
 
-let score = 0;
+let completedSets = 0;
 let targets = [];
 let nextExpectedNumber = 1;
-let numberOfTargets = 0; // Store the initial number of targets
-
-// Hide the original target
-originalTarget.style.display = 'none';
+let numberOfTargets = 0;
 
 setupButton.addEventListener('click', setupGame);
 
 function setupGame() {
-    // Clear previous game
-    targets.forEach(target => {
-        gameArea.removeChild(target.element);
-    });
+    targets.forEach(target => target.element.remove());
     targets = [];
-    score = 0;
+    completedSets = 0;
     nextExpectedNumber = 1;
-    scoreBoard.textContent = `Score: ${score}`;
+    scoreBoard.textContent = `Score: ${completedSets}`;
     
     numberOfTargets = parseInt(setupInput.value);
     
-    // Validate input
     if (isNaN(numberOfTargets) || numberOfTargets < 1 || numberOfTargets > 5) {
         alert('Please enter a number between 1 and 5');
         return;
@@ -46,67 +38,85 @@ function createTarget(number) {
     newTarget.className = 'target';
     newTarget.textContent = number;
     
-    // Styling
-    newTarget.style.position = 'absolute';
-    newTarget.style.width = '50px';
-    newTarget.style.height = '50px';
-    newTarget.style.backgroundColor = 'red';
-    newTarget.style.borderRadius = '50%';
-    newTarget.style.cursor = 'pointer';
-    newTarget.style.display = 'flex';
-    newTarget.style.alignItems = 'center';
-    newTarget.style.justifyContent = 'center';
-    newTarget.style.color = 'white';
-    newTarget.style.fontWeight = 'bold';
+    Object.assign(newTarget.style, {
+        position: 'absolute',
+        width: '50px',
+        height: '50px',
+        backgroundColor: 'red',
+        borderRadius: '50%',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        fontWeight: 'bold'
+    });
     
     gameArea.appendChild(newTarget);
-    moveTarget(newTarget);
+    positionWithoutOverlap(newTarget);
     
-    const targetObj = {
-        element: newTarget,
-        number: number
-    };
+    const targetObj = { element: newTarget, number: number };
     targets.push(targetObj);
     
     newTarget.addEventListener('click', () => handleTargetClick(targetObj));
 }
 
-function moveTarget(targetElement) {
+function positionWithoutOverlap(targetElement) {
     const gameAreaRect = gameArea.getBoundingClientRect();
     const maxX = gameAreaRect.width - targetElement.offsetWidth;
     const maxY = gameAreaRect.height - targetElement.offsetHeight;
-
-    targetElement.style.left = `${Math.floor(Math.random() * maxX)}px`;
-    targetElement.style.top = `${Math.floor(Math.random() * maxY)}px`;
+    
+    let overlap;
+    let attempts = 0;
+    const maxAttempts = 100;
+    
+    do {
+        overlap = false;
+        const x = Math.random() * maxX;
+        const y = Math.random() * maxY;
+        
+        targetElement.style.left = `${x}px`;
+        targetElement.style.top = `${y}px`;
+        
+        // Check collision with existing targets
+        const thisRect = targetElement.getBoundingClientRect();
+        for (const existingTarget of targets) {
+            const existingRect = existingTarget.element.getBoundingClientRect();
+            if (
+                thisRect.right > existingRect.left &&
+                thisRect.left < existingRect.right &&
+                thisRect.bottom > existingRect.top &&
+                thisRect.top < existingRect.bottom
+            ) {
+                overlap = true;
+                break;
+            }
+        }
+        
+        attempts++;
+        if (attempts >= maxAttempts) break; // Prevent infinite loop
+    } while (overlap);
 }
 
 function handleTargetClick(targetObj) {
     if (targetObj.number === nextExpectedNumber) {
-        // Correct click
-        score++;
+        // Correct click - remove immediately
+        targetObj.element.remove();
+        targets = targets.filter(t => t.number !== targetObj.number);
         nextExpectedNumber++;
-        scoreBoard.textContent = `Score: ${score}`;
-        targetObj.element.style.backgroundColor = 'green'; // Visual feedback
-        setTimeout(() => {
-            targetObj.element.remove(); // Remove after a brief delay
-        }, 300);
-
-        // Remove from targets array
-        const index = targets.findIndex(t => t.number === targetObj.number);
-        if (index !== -1) {
-            targets.splice(index, 1);
-        }
-
-        // Check if all targets are clicked
+        
         if (targets.length === 0) {
-            setTimeout(resetGame, 500); // Reset after a short delay
+            completedSets++;
+            scoreBoard.textContent = `Score: ${completedSets}`;
+            resetGame();
         }
     } else {
-        alert(`Wrong! Click ${nextExpectedNumber} next.`);
+        // Wrong order
+        alert(`Wrong! Click ${nextExpectedNumber} first.`);
     }
 }
 
 function resetGame() {
     nextExpectedNumber = 1;
-    createTargets(); // Create new dots (same count)
+    createTargets();
 }
