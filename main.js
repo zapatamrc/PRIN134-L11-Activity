@@ -6,6 +6,7 @@ const setupButton = document.querySelector('#setupArea button');
 
 let score = 0;
 let targets = [];
+let nextExpectedNumber = 1; // Track the next number that should be clicked
 
 // Hide the original target initially
 originalTarget.style.display = 'none';
@@ -19,6 +20,7 @@ function setupGame() {
     });
     targets = [];
     score = 0;
+    nextExpectedNumber = 1; // Reset for new game
     scoreBoard.textContent = `Score: ${score}`;
     
     const numberOfTargets = parseInt(setupInput.value);
@@ -76,12 +78,18 @@ function moveTarget(targetElement) {
 }
 
 function handleTargetClick(targetObj) {
-    score++;
-    scoreBoard.textContent = `Score: ${score}`;
-    targetObj.element.remove();
-    
-    const index = targets.findIndex(t => t.number === targetObj.number);
-    if (index !== -1) {
-        targets.splice(index, 1);
+    // Only process the click if it's the next expected number
+    if (targetObj.number === nextExpectedNumber) {
+        score++;
+        nextExpectedNumber++; // Increment for next click
+        scoreBoard.textContent = `Score: ${score}`;
+        targetObj.element.remove();
+        
+        const index = targets.findIndex(t => t.number === targetObj.number);
+        if (index !== -1) {
+            targets.splice(index, 1);
+        }
+    } else {
+        alert(`Wrong order! You need to click ${nextExpectedNumber} next.`);
     }
 }
