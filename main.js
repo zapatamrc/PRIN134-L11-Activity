@@ -6,9 +6,10 @@ const setupButton = document.querySelector('#setupArea button');
 
 let score = 0;
 let targets = [];
-let nextExpectedNumber = 1; // Track the next number that should be clicked
+let nextExpectedNumber = 1;
+let numberOfTargets = 0; // Store the initial number of targets
 
-// Hide the original target initially
+// Hide the original target
 originalTarget.style.display = 'none';
 
 setupButton.addEventListener('click', setupGame);
@@ -20,10 +21,10 @@ function setupGame() {
     });
     targets = [];
     score = 0;
-    nextExpectedNumber = 1; // Reset for new game
+    nextExpectedNumber = 1;
     scoreBoard.textContent = `Score: ${score}`;
     
-    const numberOfTargets = parseInt(setupInput.value);
+    numberOfTargets = parseInt(setupInput.value);
     
     // Validate input
     if (isNaN(numberOfTargets) || numberOfTargets < 1 || numberOfTargets > 5) {
@@ -31,7 +32,10 @@ function setupGame() {
         return;
     }
     
-    // Create targets
+    createTargets();
+}
+
+function createTargets() {
     for (let i = 1; i <= numberOfTargets; i++) {
         createTarget(i);
     }
@@ -42,6 +46,7 @@ function createTarget(number) {
     newTarget.className = 'target';
     newTarget.textContent = number;
     
+    // Styling
     newTarget.style.position = 'absolute';
     newTarget.style.width = '50px';
     newTarget.style.height = '50px';
@@ -63,9 +68,7 @@ function createTarget(number) {
     };
     targets.push(targetObj);
     
-    newTarget.addEventListener('click', function() {
-        handleTargetClick(targetObj);
-    });
+    newTarget.addEventListener('click', () => handleTargetClick(targetObj));
 }
 
 function moveTarget(targetElement) {
@@ -78,18 +81,32 @@ function moveTarget(targetElement) {
 }
 
 function handleTargetClick(targetObj) {
-    // Only process the click if it's the next expected number
     if (targetObj.number === nextExpectedNumber) {
+        // Correct click
         score++;
-        nextExpectedNumber++; // Increment for next click
+        nextExpectedNumber++;
         scoreBoard.textContent = `Score: ${score}`;
-        targetObj.element.remove();
-        
+        targetObj.element.style.backgroundColor = 'green'; // Visual feedback
+        setTimeout(() => {
+            targetObj.element.remove(); // Remove after a brief delay
+        }, 300);
+
+        // Remove from targets array
         const index = targets.findIndex(t => t.number === targetObj.number);
         if (index !== -1) {
             targets.splice(index, 1);
         }
+
+        // Check if all targets are clicked
+        if (targets.length === 0) {
+            setTimeout(resetGame, 500); // Reset after a short delay
+        }
     } else {
-        alert(`Wrong order! You need to click ${nextExpectedNumber} next.`);
+        alert(`Wrong! Click ${nextExpectedNumber} next.`);
     }
+}
+
+function resetGame() {
+    nextExpectedNumber = 1;
+    createTargets(); // Create new dots (same count)
 }
